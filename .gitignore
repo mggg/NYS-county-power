@@ -3,3 +3,16 @@
 __pycache__
 experimental_MCMC_results
 dev_files
+*.out
+*.ipynb
+
+dev_files
+aux_files
+MCMC_logs
+
+
+# Add this back in later
+MCMC_results*
+figures
+aggregated_results*.csv
+make_table*

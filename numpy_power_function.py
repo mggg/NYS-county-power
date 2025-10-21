@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def computer_power_numpy(
+def compute_power_numpy(
     u_matrix: np.ndarray,
     subset_masks: np.ndarray,
     T: float,
@@ -50,7 +50,7 @@ def computer_power_numpy(
     return p
 
 
-def computer_power_numpy_simple(
+def compute_power_numpy_simple(
     u_matrix: np.ndarray,
     subset_masks: np.ndarray,
     T: float,
@@ -101,7 +101,7 @@ def computer_power_helper_numpy_relaxed(
     # as in the Diakonikolas et al. paper.
     n = len(m)
 
-    contained_matrix = 2. * subset_masks - 1.  # (num_towns, num_subsets)
+    contained_matrix = 2.0 * subset_masks - 1.0  # (num_towns, num_subsets)
 
     subset_weights = np.transpose(contained_matrix).dot(weights)  # num_subsets
     subset_weights_min_T = subset_weights - T
@@ -110,3 +110,49 @@ def computer_power_helper_numpy_relaxed(
     banzhaf_indices = contained_matrix.dot(payoffs) / 2 ** (n - 1)
 
     return banzhaf_indices - m
+
+
+def compute_power_numpy_simple_dyn_tau(
+    u_matrix: np.ndarray,
+    subset_masks: np.ndarray,
+    T: float,
+    numerator: int,
+):
+    """
+    This function computes the difference between the proportion of voting power for a locality
+    and the proportion of the population that town has.
+
+    Equivalent to `compute_power_cupy` with the exception that the subsets in `subset_masks_bool`
+    and `subset_masks_float` include all possible, non-empty, affirmative coalitions in this
+    implementation.
+
+    Note: This is slower than the `compute_power_cupy` function.
+
+    Args:
+        u_matrix (cupy.ndarray): Array of size (num_towns, 1) that contains the weights to assign
+            to each town.
+        subset_masks (cupy.ndarray): Array of size (num_towns, num_subsets) that contains
+            boolean masks for whether a town voted in favor of a particular measure. It is assumed
+            that all subsets with at least one town voting in the affirmative are included.
+        T (float): The threshold for the power.
+
+    Returns:
+        cupy.ndarray:
+            An array of size (num_towns,) that contains the computed voting power for when each
+            town is given weight determined by the passed u_matrix.
+    """
+    totu = u_matrix.sum()
+    T = T * totu
+    a_matrix = u_matrix.T @ subset_masks
+
+    a_minus_T = a_matrix - T
+
+    X = subset_masks & (u_matrix >= a_minus_T) & (a_matrix > T)
+
+    yes_weights = np.power(numerator, subset_masks.sum(axis=0))
+    weighted_counts_matrix = X * yes_weights[np.newaxis, :]
+
+    non_zero_count = weighted_counts_matrix.sum(axis=1)
+    p = non_zero_count / np.sum(non_zero_count)
+
+    return p
