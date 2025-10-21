@@ -98,7 +98,7 @@ def main(
     best_u = cu_u.copy()
     best_power = curr_power.copy()
 
-    file_name = f"Ontario_MCMC_discrep_L1_lenburst_{burst_length}_iters_{n_bursts}_pop_{population}_T_{threshold}_id_{uuid}.jsonl"
+    file_name = f"Ontario_MCMC_discrep_L1_lenburst_{burst_length}_iters_{n_bursts}_pop_{population}_T_{threshold}_id_{uuid}_dyn_fuzz_{random_fuzz_epsilon}.jsonl"
 
     with open(f"./MCMC_results/{file_name}", "w") as f:
         print(
