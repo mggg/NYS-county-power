@@ -10,9 +10,9 @@ dev_files
 aux_files
 MCMC_logs
 
+archive
 
 # Add this back in later
 MCMC_results*
-figures
 aggregated_results*.csv
 make_table*
