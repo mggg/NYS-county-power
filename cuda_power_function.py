@@ -1,5 +1,5 @@
 """
-This is a file for containing the cuda version of the power function for use with 
+This is a file for containing the cuda version of the power function for use with
 NVIDIA GPUs. This can provide a 3x speedup over the numpy version.
 """
 
@@ -111,32 +111,32 @@ def compute_power_cupy_simple_dyn_tau(
     subset_masks_float: cp.ndarray,
     T: float,
     numerator: int,
+    denominator: int,
 ):
     """
     This function computes the difference between the proportion of voting power for a locality
     and the proportion of the population that town has.
 
-    Equivalent to `compute_power_cupy` with the exception that the subsets in `subset_masks_bool`
-    and `subset_masks_float` include all possible, non-empty, affirmative coalitions in this
-    implementation.
-
-    Note: This is slower than the `compute_power_cupy` function.
+    This function is modified from the `compute_power_numpy_simple` to account for the dynamic
+    propensity (tau was the variable used to stand for propensity in earlier notes). The idea
+    is that if the threshold needed for something to pass is tau = numerator / denominator, then
+    every player's power is maximized when the expected outcome of a vote is near the threshold
+    of passage.
 
     Args:
         u_matrix (cupy.ndarray): Array of size (num_towns, 1) that contains the weights to assign
             to each town.
         subset_masks_bool (cupy.ndarray): Array of size (num_towns, num_subsets) that contains
-            boolean masks for whether a town voted in favor of a particular measure. It is assumed
-            that all subsets with at least one town voting in the affirmative are included.
+            boolean masks for whether a town voted in favor of a particular measure. Note:
+            this should contain all possible, non-empty coalitions.
         subset_masks_float (cupy.ndarray): Array of size (num_towns, num_subsets) that contains
-            the same data as the boolean masks, but as floats for ease of computation.
-        T (float): The threshold for the power.
-
-    Returns:
-        cupy.ndarray:
-            An array of size (num_towns,) that contains the computed voting power for when each
-            town is given weight determined by the passed u_matrix.
+            the same data as the boolean masks, but as floats for ease of computation. Note:
+            this should contain all possible, non-empty coalitions.
+        T (float): The threshold for passage.
+        numerator (int): The numerator of the propensity fraction (tau).
+        denominator (int): The denominator of the propensity fraction (tau).
     """
+
     totu = u_matrix.sum()
     T = T * totu
     a_matrix = cp.transpose(u_matrix) @ subset_masks_float
@@ -147,7 +147,7 @@ def compute_power_cupy_simple_dyn_tau(
         subset_masks_bool, cp.logical_and(u_matrix >= a_minus_T, a_matrix > T)
     )
 
-    base = cp.asarray(numerator, dtype=cp.float64)
+    base = cp.asarray(numerator / (denominator - numerator), dtype=cp.float64)
     yes_weights = cp.power(base, subset_masks_bool.sum(axis=0))
     weighted_counts_matrix = cp.multiply(X, yes_weights).T
 
