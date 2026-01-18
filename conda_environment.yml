@@ -1,0 +1,5 @@
+name: nys
+channels:
+  - conda-forge
+dependencies:
+  - uv
