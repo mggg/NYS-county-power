@@ -11,7 +11,7 @@ principle of one person, one vote).
 You can set up your conda environment by running the following command:
 
 ```bash
-conda env create -f environment.yml
+conda env create -f conda_environment.yml
 conda activate nys
 ```
 
